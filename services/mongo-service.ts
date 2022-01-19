@@ -1,5 +1,9 @@
 import { Db, MongoClient, MongoClientOptions, ObjectID } from 'mongodb'
-import { MONGODB_URI, DB_NAME } from '../../configs/configs'
+console.log(global.config);
+
+const MONGODB_URI = global.MONGODB_URI || ''
+const DB_NAME = global.DB_NAME || 
+console.log('MongoDB URI', MONGODB_URI)
 
 let db: Db
 const options: MongoClientOptions = {

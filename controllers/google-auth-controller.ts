@@ -1,12 +1,12 @@
 import * as jwt from 'jsonwebtoken'
 import { Router, Request, Response, NextFunction } from 'express'
-import { SECRET, GOOGLE_REDIRECT_URL } from '../../configs/configs'
-import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_SCOPE, JWT_SECRET } from '../../configs/configs'
+import { SECRET, GOOGLE_REDIRECT_URL } from '../../configs/global'
+import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_SCOPE, JWT_SECRET } from '../../configs/global'
 import * as path from 'path'
 import MongoService from '../services/mongo-service'
 import cache from '../services/cache-service'
 import conversationsService from '../../services/conversations-service'
-import { globalEmitter } from '../services/emitter-service'
+import { emitter } from '../services/emitter-service'
 import { shortUUID } from '../utils/short-uuid'
 import UsersService from '../services/users-service'
 const { google } = require('googleapis')
@@ -87,7 +87,7 @@ export const callback = async (req, res) => {
                         await UsersService.updateConversations(saved._id.toString(), channel._id.toString())
                         
                         cache.addUser(results)
-                        appEmitter.emit('update-users')
+                        emitter.emit('update-users')
                     }
                     var token = jwt.sign({ _id: results._id, email: response.data.email }, JWT_SECRET) // Todo: Handle auto logout
                     res.json({ ok: true, data: { ...results, token } })

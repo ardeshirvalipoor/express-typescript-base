@@ -2,7 +2,7 @@ import MongoService from "./mongo-service"
 import { Db, ObjectId } from 'mongodb'
 import cache from './cache-service'
 import { CLIENTS } from './socket-service'
-import { appEmitter } from "./emitter-service"
+import { emitter } from "./emitter-service"
 
 
 
@@ -31,7 +31,7 @@ export default class UsersService {
         // delete user._id
         const updated = await MongoService.update('users', findQuery, { $set: { conversations: user.conversations } })
         cache.addUser(user)
-        appEmitter.emit('update-users')
+        emitter.emit('update-users')
         return updated
 
     }
