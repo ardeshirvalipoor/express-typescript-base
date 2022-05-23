@@ -39,6 +39,8 @@ export default (dbUri, dbName) => {
             return db.collection(collectionName).find(query).sort(sort).skip(+skip).limit(+limit).toArray()
         },
         async findOne(collectionName: string, query?: any) {
+            console.log(query);
+            
             const db = await getDB()
             return db.collection(collectionName).findOne(query)
         },
