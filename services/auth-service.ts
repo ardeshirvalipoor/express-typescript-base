@@ -9,9 +9,10 @@ const { google } = require('googleapis')
 
 
 
-export const getUrl = async (hostname: string, protocol: string, googleCredentials: any) => { // auth
+export const getUrl = async (host: string, protocol: string, googleCredentials: any) => { // auth
+    
     const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URL, GOOGLE_SCOPE } = googleCredentials
-    const prefix = protocol + '://' + hostname + (hostname == 'localhost' ? ':3000' : '')
+    const prefix = protocol + '://' + host
     const oauth2Client = new google.auth.OAuth2(
         GOOGLE_CLIENT_ID,
         GOOGLE_CLIENT_SECRET,
