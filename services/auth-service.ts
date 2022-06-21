@@ -23,19 +23,19 @@ const getGoogleUrl = (id: string, secret: string, burl: string, scope: string[])
 
 const getGoogleCallback = (id: string, secret: string, burl: string, code: string) => {
     return new Promise(async (resolve, reject) => {
-        const oauth2Client = new google.auth.OAuth2(
-            id,
-            secret,
-            burl,
-            code
-        )
-        const { tokens } = await oauth2Client.getToken(code)
-        oauth2Client.setCredentials(tokens)
-        var oauth2 = google.oauth2({
-            auth: oauth2Client,
-            version: 'v2'
-        })
         try {
+            const oauth2Client = new google.auth.OAuth2(
+                id,
+                secret,
+                burl,
+                code
+            )
+            const { tokens } = await oauth2Client.getToken(code)
+            oauth2Client.setCredentials(tokens)
+            var oauth2 = google.oauth2({
+                auth: oauth2Client,
+                version: 'v2'
+            })
             const { data } = await oauth2.userinfo.get()
             resolve(data)
         } catch (error) {
