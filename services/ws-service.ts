@@ -11,12 +11,10 @@ export function handleWSS(wss) {
 }
 
 export async function handleWsConnection(ws: WebSocket, req: Request) {
-    console.log('---- handleWSConnection ----');
-    
     ws.on('open', data => console.log('onpoen', data))
     ws.on('upgrade', data => console.log('upgrade', data))
     // ws.on('message', handleMessage(ws))
-    ws.on('message', (data) => emitter.emit('ws-message', ws, data) )
+    ws.on('message', (data) => emitter.emit('ws-message', ws, data))
     ws.on('close', handleClose(ws))
 }
 

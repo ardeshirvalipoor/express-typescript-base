@@ -9,7 +9,7 @@ export default (dbUri, dbName) => {
         useUnifiedTopology: true,
         useNewUrlParser: true,
     }
-    const client = new MongoClient(dbUri, options)
+    const client = new MongoClient(dbUri)
     async function getDB(retries = 10): Promise<Db> {
         return new Promise((resolve, reject) => {
             // if (db) db.stats().then(info=>console.log({info}))
@@ -24,7 +24,7 @@ export default (dbUri, dbName) => {
                 return resolve(db)
 
             }).catch(async err => {
-                console.log('No', retries);
+                console.log('Retrying mongo connect', dbUri, err, retries);
                 if (retries < 1) {
                     console.log('Mongo conenct error', err)
                     return reject(err)

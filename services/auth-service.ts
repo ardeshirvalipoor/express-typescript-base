@@ -1,10 +1,3 @@
-import * as jwt from 'jsonwebtoken'
-import { Router, Request, Response, NextFunction } from 'express'
-import * as path from 'path'
-import MongoService from '../services/mongo-service'
-import cache from '../services/cache-service'
-import { emitter } from '../services/emitter-service'
-import { shortUUID } from '../utils/short-uuid'
 const { google } = require('googleapis')
 
 
