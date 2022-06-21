@@ -1,19 +1,18 @@
+import { IGoogleProfile } from '../interfaces/auth'
+
 const { google } = require('googleapis')
 
 
 
-export const getUrl = async (host: string, protocol: string, googleCredentials: any) => { // auth
-    
-    const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URL, GOOGLE_SCOPE } = googleCredentials
-    const prefix = protocol + '://' + host
+const getGoogleUrl = (id: string, secret: string, burl: string, scope: string[]) => { // auth
     const oauth2Client = new google.auth.OAuth2(
-        GOOGLE_CLIENT_ID,
-        GOOGLE_CLIENT_SECRET,
-        prefix + GOOGLE_REDIRECT_URL
+        id,
+        secret,
+        burl
     )
     const url = oauth2Client.generateAuthUrl({
         access_type: 'offline',
-        scope: GOOGLE_SCOPE
+        scope
     })
     return url
 }
@@ -22,14 +21,13 @@ export const getUrl = async (host: string, protocol: string, googleCredentials: 
 //     res.sendFile(path.join(__dirname + '/../public/app/auth.html'))
 // }
 
-export const getCallback = (hostname: string, protocol: string, googleCredentials: any, code: string) => {
+const getGoogleCallback = (id: string, secret: string, burl: string, code: string) => {
     return new Promise(async (resolve, reject) => {
-        const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URL, GOOGLE_SCOPE } = googleCredentials
-        const prefix = protocol + '://' + hostname + (hostname == 'localhost' ? ':3000' : '')
         const oauth2Client = new google.auth.OAuth2(
-            GOOGLE_CLIENT_ID,
-            GOOGLE_CLIENT_SECRET,
-            prefix + GOOGLE_REDIRECT_URL
+            id,
+            secret,
+            burl,
+            code
         )
         const { tokens } = await oauth2Client.getToken(code)
         oauth2Client.setCredentials(tokens)
@@ -37,26 +35,12 @@ export const getCallback = (hostname: string, protocol: string, googleCredential
             auth: oauth2Client,
             version: 'v2'
         })
-        oauth2.userinfo.get(
-            (err: any, response: any) => {
-                if (err) {
-                    console.log(err)
-                    return reject(err)
-                } else {
-                    return resolve(response.data)
-                    // response.data
-                    // {
-                    //     id: string
-                    //     email: string
-                    //     verified_email: true,
-                    //     name: string
-                    //     given_name: strin
-                    //     family_name: strin
-                    //     picture: string
-                    //     locale: 'string
-                }
-            }
-        )
+        try {
+            const { data } = await oauth2.userinfo.get()
+            resolve(data)
+        } catch (error) {
+            reject(error)
+        }
     })
 }
 
@@ -76,3 +60,8 @@ export const getCallback = (hostname: string, protocol: string, googleCredential
 //                 }); */
 //     }
 // }
+
+export default {
+    getGoogleUrl,
+    getGoogleCallback
+}

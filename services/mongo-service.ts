@@ -9,7 +9,7 @@ export default (dbUri, dbName) => {
         useUnifiedTopology: true,
         useNewUrlParser: true,
     }
-    const client = new MongoClient(dbUri)
+    const client = new MongoClient(dbUri, options)
     async function getDB(retries = 10): Promise<Db> {
         return new Promise((resolve, reject) => {
             // if (db) db.stats().then(info=>console.log({info}))
