@@ -34,7 +34,7 @@ export default (dbUri, dbName) => {
         })
     }
     return {
-        async find(collectionName: string, query?: any, sort?: any, skip = 0, limit = 25) { // Todo: fix later
+        async find(collectionName: string, query?: any, sort= {}, skip = 0, limit = 25) { // Todo: fix later
             const db = await getDB()
             return db.collection(collectionName).find(query).sort(sort).skip(+skip).limit(+limit).toArray()
         },
@@ -97,6 +97,20 @@ export default (dbUri, dbName) => {
 
                     let collection = db.collection(collectionName)
                     const docs = await collection.findOneAndUpdate(query, /* { $set: { ...item } */ item, options)
+                    return resolve(docs) //Todo: change to _id
+                } catch (error) {
+                    console.log('Code 3: ', error)
+                    return reject(error)
+                }
+            })
+        },
+        async updateMany<T>(collectionName: string, query: any, item: any, options = {}) { // Todod change it to find
+            return new Promise<any>(async (resolve, reject) => {
+                try {
+                    const db = await getDB()
+
+                    let collection = db.collection(collectionName)
+                    const docs = await collection.updateMany(query, /* { $set: { ...item } */ item, options)
                     return resolve(docs) //Todo: change to _id
                 } catch (error) {
                     console.log('Code 3: ', error)
