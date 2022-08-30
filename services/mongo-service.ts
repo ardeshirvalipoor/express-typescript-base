@@ -108,12 +108,24 @@ export default (dbUri, dbName) => {
             return new Promise<any>(async (resolve, reject) => {
                 try {
                     const db = await getDB()
-
                     let collection = db.collection(collectionName)
                     const docs = await collection.updateMany(query, /* { $set: { ...item } */ item, options)
                     return resolve(docs) //Todo: change to _id
                 } catch (error) {
                     console.log('Code 3: ', error)
+                    return reject(error)
+                }
+            })
+        },
+        async deleteMany<T>(collectionName: string, query: any, options = {}) { // Todod change it to find
+            return new Promise<any>(async (resolve, reject) => {
+                try {
+                    const db = await getDB()
+                    let collection = db.collection(collectionName)
+                    const docs = await collection.deleteMany(query, options)
+                    return resolve(docs) //Todo: change to _id
+                } catch (error) {
+                    console.log('Code delete many: ', error)
                     return reject(error)
                 }
             })
