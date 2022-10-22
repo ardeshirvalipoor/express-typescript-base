@@ -17,7 +17,7 @@ export function authenticateToken(JWT_SECRET) {
 
         try {
             const user: any = jwt.verify(token, JWT_SECRET)
-            req.user = { email: user.email }
+            req['user'] = { email: user.email } as any
             next()
         } catch (err) {
             res.status(403).json({
