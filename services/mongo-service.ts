@@ -34,6 +34,31 @@ export default (dbUri, dbName) => {
         })
     }
     return {
+        async search(collectionName: string, indexName: string, query: any, sort = {}, skip = 0, limit = 25) {
+            const db = await getDB();
+            const q = [
+                {
+                    '$search': {
+                        'index': indexName,
+                        'text': {
+                            'query': `{ $text: { $search: ${query} } }`,
+                            'path': {
+                                'wildcard': '*'
+                            }
+                        }
+                    }
+                },
+                {
+                    $limit: limit
+                },
+                {
+                    $project: {
+                        "_id": 0,
+                    }
+                }
+            ];
+            return db.collection(collectionName).aggregate(q).toArray();
+        },
         async find(collectionName: string, query?: any, sort= {}, skip = 0, limit = 25) { // Todo: fix later
             const db = await getDB()
             return db.collection(collectionName).find(query).sort(sort).skip(+skip).limit(+limit).toArray()
