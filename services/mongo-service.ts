@@ -24,7 +24,7 @@ export default (dbUri, dbName) => {
                 return resolve(db)
 
             }).catch(async err => {
-                console.log('Retrying mongo connect', dbUri, err, retries);
+                console.log('Retrying mongo connect', dbUri, err, retries)
                 if (retries < 1) {
                     console.log('Mongo conenct error', err)
                     return reject(err)
@@ -35,7 +35,7 @@ export default (dbUri, dbName) => {
     }
     return {
         async search(collectionName: string, indexName: string, query: any, sort = {}, skip = 0, limit = 25) {
-            const db = await getDB();
+            const db = await getDB()
             const q = [
                 {
                     '$search': {
@@ -56,16 +56,18 @@ export default (dbUri, dbName) => {
                         "_id": 0,
                     }
                 }
-            ];
-            return db.collection(collectionName).aggregate(q).toArray();
+            ]
+            return db.collection(collectionName).aggregate(q).toArray()
         },
-        async find(collectionName: string, query?: any, sort= {}, skip = 0, limit = 25) { // Todo: fix later
+        async find(collectionName: string, query?: any, sort = {}, skip = 0, limit = 25) { // Todo: fix later
             const db = await getDB()
-            return db.collection(collectionName).find(query).sort(sort).skip(+skip).limit(+limit).toArray()
+            const q = Array.isArray(query) ? query : [query]
+
+            return db.collection(collectionName).find(...q).sort(sort).skip(+skip).limit(+limit).toArray()
         },
         async findOne(collectionName: string, query?: any) {
-            console.log(query);
-            
+            console.log(query)
+
             const db = await getDB()
             return db.collection(collectionName).findOne(query)
         },
