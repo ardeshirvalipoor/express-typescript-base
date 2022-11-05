@@ -2,7 +2,7 @@ import { Db, MongoClient, MongoClientOptions, ObjectID } from 'mongodb'
 
 
 
-export default (dbUri, dbName) => {
+export default (dbUri: string, dbName: string) => {
 
     let db: Db
     const options: MongoClientOptions = {
