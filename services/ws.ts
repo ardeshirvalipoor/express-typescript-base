@@ -1,6 +1,6 @@
-import WebSocket = require('ws')
+import { WebSocket } from 'ws'
 import { Request } from 'express'
-import { emitter } from './emitter-service'
+import { emitter } from './emitter'
 export let CLIENTS = new Map()
 
 export function handleWSS(wss) {
@@ -20,7 +20,7 @@ export async function handleWsConnection(ws: WebSocket, req: Request) {
 
 function handleClose(ws: WebSocket) {
     return async function () {
-        CLIENTS.delete(ws['email']);
+        CLIENTS.delete(ws['email'])
         CLIENTS.forEach(client => {
             client.send?.(JSON.stringify({ type: 'status', _id: ws['email'], status: 'offline' }))
         })
