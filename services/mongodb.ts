@@ -123,7 +123,7 @@ export default (dbUri: string, dbName: string) => {
                     const db = await getDB()
 
                     let collection = db.collection(collectionName)
-                    const docs = await collection.findOneAndUpdate(query, /* { $set: { ...item } */ item, options)
+                    const docs = await collection.findOneAndUpdate(query, item, options)
                     return resolve(docs) //Todo: change to _id
                 } catch (error) {
                     console.log('Code 3: ', error)
