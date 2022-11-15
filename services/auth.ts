@@ -8,9 +8,9 @@ function getGoogleUrl(clientId: string, clientSecret: string, redirectUrl: strin
     return url
 }
 
-async function getGoogleCallback(clientSecret: string, redirectUrl: string, code: string) {
+async function getGoogleCallback(clientId: string, clientSecret: string, redirectUrl: string, code: string) {
     try {
-        const oauth2Client = new google.auth.OAuth2(clientSecret, redirectUrl, code)
+        const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUrl)
         const { tokens } = await oauth2Client.getToken(code)
         oauth2Client.setCredentials(tokens)
         var oauth2 = google.oauth2({ auth: oauth2Client, version: 'v2' })
