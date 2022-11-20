@@ -1,6 +1,10 @@
 import { Db, MongoClient, MongoClientOptions, ObjectID } from 'mongodb'
 
-
+interface IFindOptions {
+    limit?: number
+    skip?: number
+    sort?: any
+}
 
 export default (dbUri: string, dbName: string) => {
 
@@ -59,10 +63,12 @@ export default (dbUri: string, dbName: string) => {
             ]
             return db.collection(collectionName).aggregate(q).toArray()
         },
-        async find(collectionName: string, query?: any, sort = {}, skip = 0, limit = 25) { // Todo: fix later
+        async find(collectionName: string, query?: any, options: IFindOptions = {}) { // Todo: fix later
+            const { limit, skip, sort } = { sort: {}, skip: 0, limit: 25, ...options }
             const db = await getDB()
             const q = Array.isArray(query) ? query : [query]
-
+            console.log('find', ...q);
+            
             return db.collection(collectionName).find(...q).sort(sort).skip(+skip).limit(+limit).toArray()
         },
         async findOne(collectionName: string, query?: any) {

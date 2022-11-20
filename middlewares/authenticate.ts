@@ -11,7 +11,7 @@ function token(secret: string) {
             })
         }
         try {
-            req['user'] = jwt.verify(token, secret)
+            req['user'] = <any>jwt.verify(token, secret)
             next()
         } catch (err) {
             res.status(403).json({
