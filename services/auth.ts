@@ -1,6 +1,5 @@
 
 import { google } from 'googleapis'
-import { IGoogleProfile } from '../interfaces/auth'
 
 function getGoogleUrl(clientId: string, clientSecret: string, redirectUrl: string, scope: string[]) {
     const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUrl)
