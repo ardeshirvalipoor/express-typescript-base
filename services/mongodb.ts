@@ -67,6 +67,8 @@ export default (dbUri: string, dbName: string) => {
             const { limit, skip, sort } = { sort: {}, skip: 0, limit: 25, ...options }
             const db = await getDB()
             const q = Array.isArray(query) ? query : [query]
+            console.log('find', ...q);
+            
             return db.collection(collectionName).find(...q).sort(sort).skip(+skip).limit(+limit).toArray()
         },
         async findOne(collectionName: string, query?: any) {
@@ -128,6 +130,20 @@ export default (dbUri: string, dbName: string) => {
 
                     let collection = db.collection(collectionName)
                     const docs = await collection.findOneAndUpdate(query, item, options)
+                    return resolve(docs) //Todo: change to _id
+                } catch (error) {
+                    console.log('Code 3: ', error)
+                    return reject(error)
+                }
+            })
+        },
+        async replace<T>(collectionName: string, query: any, item: any, options = {}) { // Todod change it to find
+            return new Promise<any>(async (resolve, reject) => {
+                try {
+                    const db = await getDB()
+
+                    let collection = db.collection(collectionName)
+                    const docs = await collection.replaceOne(query, item, options)
                     return resolve(docs) //Todo: change to _id
                 } catch (error) {
                     console.log('Code 3: ', error)
