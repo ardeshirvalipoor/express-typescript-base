@@ -77,12 +77,12 @@ export default (dbUri: string, dbName: string) => {
             const db = await getDB()
             return db.collection(collectionName).findOne(query)
         },
-        async aggregate<T>(collectionName: string, query?: any, sort?: any) {
+        async aggregate<T>(collectionName: string, query: any[]) {
             return new Promise<T[]>(async (resolve, reject) => {
                 try {
                     const db = await getDB()
                     let collection = db.collection(collectionName)
-                    const docs = await collection.aggregate(query).limit(50).toArray()
+                    const docs = await collection.aggregate(query).toArray()
 
                     return resolve(docs)
                 } catch (error) {
