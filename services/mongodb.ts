@@ -67,8 +67,6 @@ export default (dbUri: string, dbName: string) => {
             const { limit, skip, sort } = { sort: {}, skip: 0, limit: 25, ...options }
             const db = await getDB()
             const q = Array.isArray(query) ? query : [query]
-            console.log('find', ...q);
-            
             return db.collection(collectionName).find(...q).sort(sort).skip(+skip).limit(+limit).toArray()
         },
         async findOne(collectionName: string, query?: any) {
