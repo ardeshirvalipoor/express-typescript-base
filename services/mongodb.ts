@@ -1,3 +1,4 @@
+import { count } from 'console'
 import { Db, MongoClient, MongoClientOptions, ObjectID } from 'mongodb'
 
 interface IFindOptions {
@@ -63,6 +64,10 @@ export default (dbUri: string, dbName: string) => {
                 }
             ]
             return db.collection(collectionName).aggregate(q).toArray()
+        },
+        async count(collectionName: string, query: any = {}) {
+            const db = await getDB()
+            return db.collection(collectionName).countDocuments(query)
         },
         async find(collectionName: string, query?: any, options: IFindOptions = {}) { // Todo: fix later
             const { limit, skip, sort, projection } = { projection: {}, sort: {}, skip: 0, limit: 25, ...options }
