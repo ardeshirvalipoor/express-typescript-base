@@ -72,11 +72,11 @@ export default (dbUri: string, dbName: string) => {
         async find(collectionName: string, query?: any, options: IFindOptions = {}) { // Todo: fix later
             const { limit, skip, sort, projection } = { projection: {}, sort: {}, skip: 0, limit: 25, ...options }
             const db = await getDB()
-            for (const key in query) {
-                if (key.endsWith('_id') && typeof query[key] === 'string') {
-                    query[key] = new ObjectId(query[key])
-                }
-            }
+            // for (const key in query) {
+            //     if (key.endsWith('_id') && typeof query[key] === 'string') {
+            //         query[key] = new ObjectId(query[key])
+            //     }
+            // }
             return db.collection(collectionName).find(query).project(projection).sort(sort).skip(+skip).limit(+limit).toArray()
         },
         async findOne(collectionName: string, query?: any) {
