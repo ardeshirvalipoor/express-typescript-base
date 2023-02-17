@@ -3,8 +3,8 @@ import * as jwt from 'jsonwebtoken'
 
 function token(secret: string) {
     return async (req: Request, res: Response, next: NextFunction) => {
-        const authHeader = req.headers['authorization']
-        const token = authHeader && authHeader.split(' ')[1]
+        const authHeader = req.headers['authorization'] || req.headers['Authorization'] || ''
+        const token = authHeader.toString().split(' ').pop()
         if (!token) {
             return res.status(401).json({
                 errors: [{ msg: 'Token not found' }],
