@@ -10,178 +10,216 @@ interface IFindOptions {
 
 export default (dbUri: string, dbName: string) => {
 
-    let db: Db
     const options: MongoClientOptions = {
         useUnifiedTopology: true,
         useNewUrlParser: true,
     }
     const client = new MongoClient(dbUri, options)
-    async function getDB(retries = 10): Promise<Db> {
-        return new Promise((resolve, reject) => {
-            // if (db) db.stats().then(info=>console.log({info}))
+    let db: Db
+    async function reconnect(retries = 5, interval = 2000) {
+        if (db) {
+            console.log('Already connected')
+            return
+        }
 
-            // await client.connect();
-            // const database = client.db('sample_mflix');
-            // const movies = database.collection('movies');
+        if (retries < 1) {
+            console.error('Failed to reconnect after all attempts')
+            return
+        }
 
-            if (db) return resolve(db)
-            client.connect().then(connection => {
-                db = connection.db(dbName)
-                return resolve(db)
+        console.log('Attempting to reconnect...')
 
-            }).catch(async err => {
-                console.log('Retrying mongo connect', dbUri, err, retries)
-                if (retries < 1) {
-                    console.log('Mongo conenct error', err)
-                    return reject(err)
-                }
-                return await getDB(--retries)
-            })
-        })
+        try {
+            await client.connect()
+            db = client.db(dbName)
+            console.log('Reconnected successfully')
+        } catch (err) {
+            console.error('Reconnect attempt failed, retrying...', err)
+            setTimeout(() => reconnect(retries - 1, interval), interval)
+        }
     }
-    return {
-        async search(collectionName: string, indexName: string, query: any, sort = {}, skip = 0, limit = 25) {
-            const db = await getDB()
-            const q = [
-                {
-                    '$search': {
-                        'index': indexName,
-                        'text': {
-                            'query': `{ $text: { $search: ${query} } }`,
-                            'path': {
-                                'wildcard': '*'
-                            }
+
+    client.on('close', () => {
+        console.log('MongoDB connection closed')
+        reconnect()
+    })
+
+    client.on('reconnect', () => {
+        console.log('MongoDB reconnected')
+    })
+
+    client.on('error', (err) => {
+        console.error('MongoDB connection error:', err)
+        reconnect()
+    })
+
+
+    async function search(collectionName: string, indexName: string, query: any, sort = {}, skip = 0, limit = 25) {
+        if (!db) {
+            await reconnect()
+        }
+        const q = [
+            {
+                '$search': {
+                    'index': indexName,
+                    'text': {
+                        'query': `{ $text: { $search: ${query} } }`,
+                        'path': {
+                            'wildcard': '*'
                         }
                     }
-                },
-                {
-                    $limit: limit
-                },
-                {
-                    $project: {
-                        "_id": 0,
-                    }
                 }
-            ]
-            return db.collection(collectionName).aggregate(q).toArray()
-        },
-        async count(collectionName: string, query: any = {}) {
-            const db = await getDB()
-            return db.collection(collectionName).countDocuments(query)
-        },
-        async find(collectionName: string, query?: any, options: IFindOptions = {}) { // Todo: fix later
-            const { limit, skip, sort, projection } = { projection: {}, sort: {}, skip: 0, limit: 25, ...options }
-            const db = await getDB()
-            // for (const key in query) {
-            //     if (key.endsWith('_id') && typeof query[key] === 'string') {
-            //         query[key] = new ObjectId(query[key])
-            //     }
-            // }
-            return db.collection(collectionName).find(query).project(projection).sort(sort).skip(+skip).limit(+limit).toArray()
-        },
-        async findOne(collectionName: string, query?: any) {
-            const db = await getDB()
-            return db.collection(collectionName).findOne(query)
-        },
-        async aggregate<T>(collectionName: string, query: any[]) {
-            return new Promise<T[]>(async (resolve, reject) => {
-                try {
-                    const db = await getDB()
-                    let collection = db.collection(collectionName)
-                    const docs = await collection.aggregate(query).toArray()
+            },
+            {
+                $limit: limit
+            },
+            {
+                $project: {
+                    "_id": 0,
+                }
+            }
+        ]
+        return db.collection(collectionName).aggregate(q).toArray()
+    }
 
-                    return resolve(docs)
-                } catch (error) {
-                    console.log('Code 2: ', error)
-                    return reject(error)
-                }
-            })
-        },
-        async save<T>(collectionName: string, item: any) {
-            return new Promise<any>(async (resolve, reject) => {
-                try {
-                    const db = await getDB()
-
-                    let collection = db.collection(collectionName)
-                    const docs = await collection.insertOne(item) // or at here?
-                    // docs: {
-                    //     acknowledged: true,
-                    //         insertedId: new ObjectId("60ef5f573e014e54bf7b19f1")
-                    // }
-                    return resolve({ ...item, _id: docs?.insertedId }) //Todo: change to _id
-                } catch (error) {
-                    console.log('Code 3: ', error)
-                    return reject(error)
-                }
-            })
-        },
-        async saveMany<T>(collectionName: string, items: any) {
-            return new Promise<any>(async (resolve, reject) => {
-                try {
-                    const db = await getDB()
-
-                    let collection = db.collection(collectionName)
-                    const docs = await collection.insertMany(items)
-                    return resolve({ results: 'inserted' })
-                } catch (error) {
-                    console.log('Code 3: ', error)
-                    return reject(error)
-                }
-            })
-        },
-        async update<T>(collectionName: string, query: any, item: any, options = {}) { // Todod change it to find
-            return new Promise<any>(async (resolve, reject) => {
-                try {
-                    const db = await getDB()
-
-                    let collection = db.collection(collectionName)
-                    const docs = await collection.findOneAndUpdate(query, item, options)
-                    return resolve(docs) //Todo: change to _id
-                } catch (error) {
-                    console.log('Code 3: ', error)
-                    return reject(error)
-                }
-            })
-        },
-        async replace<T>(collectionName: string, query: any, item: any, options = {}) { // Todod change it to find
-            return new Promise<any>(async (resolve, reject) => {
-                try {
-                    const db = await getDB()
-
-                    let collection = db.collection(collectionName)
-                    const docs = await collection.replaceOne(query, item, options)
-                    return resolve(docs) //Todo: change to _id
-                } catch (error) {
-                    console.log('Code 3: ', error)
-                    return reject(error)
-                }
-            })
-        },
-        async updateMany<T>(collectionName: string, query: any, item: any, options = {}) { // Todod change it to find
-            return new Promise<any>(async (resolve, reject) => {
-                try {
-                    const db = await getDB()
-                    let collection = db.collection(collectionName)
-                    const docs = await collection.updateMany(query, /* { $set: { ...item } */ item, options)
-                    return resolve(docs) //Todo: change to _id
-                } catch (error) {
-                    console.log('Code 3: ', error)
-                    return reject(error)
-                }
-            })
-        },
-        async deleteMany<T>(collectionName: string, query: any, options = {}) { // Todod change it to find
-            return new Promise<any>(async (resolve, reject) => {
-                try {
-                    const db = await getDB()
-                    let collection = db.collection(collectionName)
-                    const docs = await collection.deleteMany(query, options)
-                    return resolve(docs) //Todo: change to _id
-                } catch (error) {
-                    console.log('Code delete many: ', error)
-                    return reject(error)
-                }
-            })
+    async function count(collectionName: string, query: any = {}) {
+        if (!db) {
+            await reconnect()
         }
+        return db.collection(collectionName).countDocuments(query)
+    }
+
+    async function find(collectionName: string, query?: any, options: IFindOptions = {}) { // Todo: fix later
+        const { limit, skip, sort, projection } = { projection: {}, sort: {}, skip: 0, limit: 25, ...options }
+        if (!db) {
+            await reconnect()
+        }
+        // for (const key in query) {
+        //     if (key.endsWith('_id') && typeof query[key] === 'string') {
+        //         query[key] = new ObjectId(query[key])
+        //     }
+        // }
+        return db.collection(collectionName).find(query).project(projection).sort(sort).skip(+skip).limit(+limit).toArray()
+    }
+
+    async function findOne(collectionName: string, query?: any) {
+        if (!db) {
+            await reconnect()
+        }
+        return db.collection(collectionName).findOne(query)
+    }
+
+    async function aggregate<T>(collectionName: string, query: any[]) {
+        try {
+            if (!db) {
+                await reconnect()
+            }
+            let collection = db.collection(collectionName)
+            const docs = await collection.aggregate(query).toArray()
+            return docs
+        } catch (error) {
+            console.log('Code 2: ', error)
+            throw error
+        }
+    }
+
+    async function save<T>(collectionName: string, item: any) {
+        try {
+            if (!db) {
+                await reconnect()
+            }
+            let collection = db.collection(collectionName)
+            const docs = await collection.insertOne(item) // or at here?
+            return { ...item, _id: docs?.insertedId }
+        } catch (error) {
+            console.log('Code 3: ', error)
+            throw error
+        }
+    }
+
+    async function saveMany<T>(collectionName: string, items: any) {
+        try {
+            if (!db) {
+                await reconnect()
+            }
+
+            let collection = db.collection(collectionName)
+            const docs = await collection.insertMany(items)
+            return { results: 'inserted' }
+        } catch (error) {
+            console.log('Code 3: ', error)
+            throw error
+        }
+    }
+
+    async function update<T>(collectionName: string, query: any, item: any, options = {}) { // Todod change it to find
+        try {
+            if (!db) {
+                await reconnect()
+            }
+            let collection = db.collection(collectionName)
+            const docs = await collection.findOneAndUpdate(query, item, options)
+            return docs
+        } catch (error) {
+            console.log('Code 3: ', error)
+            throw error
+        }
+    }
+
+    async function replace<T>(collectionName: string, query: any, item: any, options = {}) { // Todod change it to find
+        try {
+            if (!db) {
+                await reconnect()
+            }
+            let collection = db.collection(collectionName)
+            const docs = await collection.replaceOne(query, item, options)
+            return docs
+        } catch (error) {
+            console.log('Code 3: ', error)
+            throw error
+        }
+    }
+
+    async function updateMany<T>(collectionName: string, query: any, item: any, options = {}) { // Todod change it to find
+        try {
+            if (!db) {
+                await reconnect()
+            }
+            let collection = db.collection(collectionName)
+            const docs = await collection.updateMany(query, /* { $set: { ...item } */ item, options)
+            return docs
+        } catch (error) {
+            console.log('Code 3: ', error)
+            throw error
+        }
+    }
+
+    async function deleteMany<T>(collectionName: string, query: any, options = {}) { // Todod change it to find
+        try {
+            if (!db) {
+                await reconnect()
+            }
+            let collection = db.collection(collectionName)
+            const docs = await collection.deleteMany(query, options)
+            return docs
+        } catch (error) {
+            console.log('Code delete many: ', error)
+            throw error
+        }
+    }
+
+    return {
+        search,
+        count,
+        find,
+        findOne,
+        aggregate,
+        save,
+        saveMany,
+        update,
+        updateMany,
+        replace,
+        deleteMany,
+
     }
 }
