@@ -1,5 +1,4 @@
-import { count } from 'console'
-import { Db, MongoClient, MongoClientOptions, ObjectId, ObjectID } from 'mongodb'
+import { Db, MongoClient, MongoClientOptions } from 'mongodb'
 
 interface IFindOptions {
     limit?: number
@@ -220,6 +219,5 @@ export default (dbUri: string, dbName: string) => {
         updateMany,
         replace,
         deleteMany,
-
     }
 }
