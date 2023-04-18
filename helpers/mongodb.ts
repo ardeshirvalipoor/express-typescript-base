@@ -1,3 +1,5 @@
+import { ObjectId } from 'mongodb'
+
 export function convertToMongoStyle(query) {
     Object.keys(query).forEach(key => {
         if (typeof query[key] === 'object') {
@@ -7,6 +9,9 @@ export function convertToMongoStyle(query) {
             const newKey = '$' + key
             query[newKey] = query[key]
             delete query[key]
+        }
+        if (key.endsWith('_id') && typeof query[key] === 'string') {
+            query[key] = new ObjectId(query[key]);
         }
     })
     return query
