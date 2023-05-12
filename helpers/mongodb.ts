@@ -10,7 +10,7 @@ export function convertToMongoStyle(query) {
             query[newKey] = query[key]
             delete query[key]
         }
-        if (key.endsWith('_id') && typeof query[key] === 'string') {
+        if (key.endsWith('_id') && typeof query[key] === 'string' && query[key]) {
             query[key] = new ObjectId(query[key]);
         }
     })
