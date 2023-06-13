@@ -15,7 +15,7 @@ function token(secret: string) {
             next()
         } catch (err) {
             res.status(403).json({
-                errors: [{ msg: 'Token is not valid, or you do not have access to this area.' }],
+                error: 'Token is not valid, or you do not have access to this area.',
             })
         }
     }
