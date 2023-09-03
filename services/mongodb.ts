@@ -193,6 +193,20 @@ export default (dbUri: string, dbName: string) => {
         }
     }
 
+    async function deleteOne <T>(collectionName: string, query: any, options = {}) { // Todod change it to find
+        try {
+            if (!db) {
+                await reconnect()
+            }
+            let collection = db.collection(collectionName)
+            const docs = await collection.deleteOne(query, options)
+            return docs
+        } catch (error) {
+            console.log('Code delete: ', error)
+            throw error
+        }
+    }
+
     async function deleteMany<T>(collectionName: string, query: any, options = {}) { // Todod change it to find
         try {
             if (!db) {
@@ -218,6 +232,7 @@ export default (dbUri: string, dbName: string) => {
         update,
         updateMany,
         replace,
+        deleteOne,
         deleteMany,
     }
 }
