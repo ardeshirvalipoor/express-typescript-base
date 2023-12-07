@@ -1,33 +1,51 @@
-import { WebSocket } from 'ws'
+import { WebSocket, WebSocketServer } from 'ws'
 import { Request } from 'express'
 import { emitter } from './emitter'
-export let CLIENTS = new Map()
+import { wsAuthMiddleware } from '../middlewares/ws'
+import { Server } from 'http'
 
-export function handleWSS(wss) {
-    wss.on('connection', handleWsConnection)
-    wss.on('error', (err) => console.log('wss faced an error', err))
-    wss.on('close', (err) => console.log('wss closed', err))
-    wss.on('listening', () => console.log('wss listening'))
+export const CLIENTS = new Map<string, WebSocket>()
+
+export function handleWSS(server: Server, configs: any) {
+
+    const wss = new WebSocketServer({ noServer: true })
+    wss.on('connection', function connection(ws: WebSocket, req: Request) {
+        handleWsConnection(ws, req)
+    })
+    server.on('upgrade', function upgrade(req: Request, socket, head) {
+        socket.on('error', console.error)
+        wsAuthMiddleware(req, null, function next(err: any) {
+            if (err) {
+                console.log('sending unauth', err)
+                socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
+                socket.destroy()
+                return
+            }
+            socket.removeListener('error', console.error)
+            wss.handleUpgrade(req, socket, head, function done(ws) {
+                wss.emit('connection', ws, req)
+            })
+        }, configs)
+    })
+    wss.on('error', console.error)
 }
 
-export async function handleWsConnection(ws: WebSocket, req: Request) {
-    ws.on('open', data => console.log('onpoen', data))
-    ws.on('upgrade', data => console.log('upgrade', data))
-    // ws.on('message', handleMessage(ws))
-    ws.on('message', (data) => emitter.emit('ws-message', ws, data))
-    ws.on('close', handleClose(ws))
+function handleWsConnection(ws: WebSocket, req: Request) {
+    const userId = req.userId
+    if (userId) CLIENTS.set(userId, ws)
+    ws.on('message', (data) => {
+        emitter.emit('ws-message', ws, data)
+    })
+    ws.on('close', () => {
+        if (userId) {
+            notifyClientsOfStatus(userId, 'offline')
+            CLIENTS.delete(userId)
+        }
+    })
+    ws.on('error', console.error)
+    ws.send(JSON.stringify({ message: 'Hello from server!' }))
 }
 
-function handleClose(ws: WebSocket) {
-    return async function () {
-        CLIENTS.delete(ws['email'])
-        CLIENTS.forEach(client => {
-            client.send?.(JSON.stringify({ type: 'status', _id: ws['email'], status: 'offline' }))
-        })
-    }
-}
-
-export async function verifyClient(info, done) {
-    // done(false, 401, 'Unauthorized')
-    done(true)
+function notifyClientsOfStatus(userId: string, status: string) {
+    CLIENTS.get(userId).send(JSON.stringify({ type: 'status', _id: userId, status }))
 }
