@@ -26,7 +26,7 @@ export default (dbUri: string, dbName: string) => {
             return
         }
 
-        console.log('Attempting to reconnect...')
+        console.log('Attempting to reconnect...', retries)
 
         try {
             await client.connect()
@@ -101,11 +101,12 @@ export default (dbUri: string, dbName: string) => {
         return db.collection(collectionName).find(query).project(projection).sort(sort).skip(+skip).limit(+limit).toArray()
     }
 
-    async function findOne(collectionName: string, query?: any) {
+    async function findOne(collectionName: string, query?: any, options: IFindOptions = {}) {
+        const { projection } = { projection: {}, ...options }
         if (!db) {
             await reconnect()
         }
-        return db.collection(collectionName).findOne(query)
+        return db.collection(collectionName).findOne(query)//.project(projection)
     }
 
     async function aggregate<T>(collectionName: string, query: any[]) {
