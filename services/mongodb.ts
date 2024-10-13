@@ -9,10 +9,7 @@ interface IFindOptions {
 
 export default (dbUri: string, dbName: string) => {
 
-    const options: MongoClientOptions = {
-        useUnifiedTopology: true,
-        useNewUrlParser: true,
-    }
+    const options: MongoClientOptions = {}
     const client = new MongoClient(dbUri, options)
     let db: Db
     async function reconnect(retries = 5, interval = 2000) {
@@ -194,7 +191,7 @@ export default (dbUri: string, dbName: string) => {
         }
     }
 
-    async function deleteOne <T>(collectionName: string, query: any, options = {}) { // Todod change it to find
+    async function deleteOne<T>(collectionName: string, query: any, options = {}) { // Todod change it to find
         try {
             if (!db) {
                 await reconnect()

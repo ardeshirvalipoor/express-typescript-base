@@ -36,8 +36,26 @@ function optionalToken(secret: string) {
     }
 }
 
+function authenticateJWTFromCookie(secret: string) {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const token = req?.cookies?.jwt
+        if (token) {
+            jwt.verify(token, secret, (err: any, decoded: any) => {
+                if (err) {
+                    return res.status(403).json({ ok: false, error: 'Invalid token' })
+                }
+                req['user'] = decoded
+                next()
+            })
+        } else {
+            res.status(401).json({ ok: false, error: 'No token provided' })
+        }
+    }
+}
+
 
 export default {
     token,
-    optionalToken
+    optionalToken,
+    authenticateJWTFromCookie,
 }
