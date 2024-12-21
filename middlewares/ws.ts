@@ -11,7 +11,7 @@ export function wsAuthMiddleware(req: Request, res: Response, next: NextFunction
     }
     try {
         const decoded: any = jwt.verify(token, configs.jwt.SECRET) // Replace with your actual secret key
-        req.userId = decoded._id
+        req.user = decoded.user // todo: fix it
         req.email = decoded.email
         next()
     } catch (error) {

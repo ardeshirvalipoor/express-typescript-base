@@ -1,4 +1,11 @@
 import { Router, Request, Response, NextFunction } from 'express'
+
+// Extend the Request interface to include the user property
+declare module 'express-serve-static-core' {
+    interface Request {
+        user?: any;
+    }
+}
 import * as jwt from 'jsonwebtoken'
 
 function token(secret: string) {
@@ -11,7 +18,7 @@ function token(secret: string) {
             })
         }
         try {
-            req['user'] = <any>jwt.verify(token, secret)
+            req.user = jwt.verify(token, secret)
             next()
         } catch (err) {
             res.status(403).json({
@@ -27,7 +34,7 @@ function optionalToken(secret: string) {
         const token = authHeader.toString().split(' ').pop()
         if (token) {
             try {
-                req['user'] = <any>jwt.verify(token, secret)
+                req.user = jwt.verify(token, secret)
             } catch (err) {
                 // Invalid token, ignore and treat as unauthenticated
             }
@@ -44,7 +51,26 @@ function authenticateJWTFromCookie(secret: string) {
                 if (err) {
                     return res.status(403).json({ ok: false, error: 'Invalid token' })
                 }
-                req['user'] = decoded
+                console.log('Going through auth middleware', decoded);
+
+                req.user = decoded.user
+                /* 
+                user: {
+                    id: 'EeGz48kyFNBm6pNIEBrP',
+                    phone_number: '989121995001',
+                    date: 1734464377,
+                    contact: null,
+                    last_name: 'Notifications',
+                    is_bot: false,
+                    first_name: 'Flep',
+                    chat_id: 6679445900,
+                    username: 'fleptester',
+                    at: '2024-12-18T21:57:13.747Z',
+                    join_token: '22'
+                },
+                iat: 1734559110,
+                exp: 1737151110
+                */
                 next()
             })
         } else {
