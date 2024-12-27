@@ -51,8 +51,6 @@ function authenticateJWTFromCookie(secret: string) {
                 if (err) {
                     return res.status(403).json({ ok: false, error: 'Invalid token' })
                 }
-                console.log('Going through auth middleware', decoded);
-
                 req.user = decoded.user
                 /* 
                 user: {
